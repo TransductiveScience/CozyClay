@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spatial Commons / CozyClay World Fork</title>
+<style>
+:root{color-scheme:dark;--ink:#e8e6df;--muted:#9da7af;--glass:rgba(9,16,23,.77);--edge:rgba(178,213,215,.23);--accent:#8cefe3}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040a12;color:var(--ink);font-family:"Segoe UI",Inter,system-ui,sans-serif}
+canvas#world{position:absolute;inset:0;display:block;outline:0}
+#hud{position:absolute;inset:0;pointer-events:none}
+h1,h2,p{margin:0}.brand{position:absolute;top:28px;left:35px;display:flex;align-items:center;gap:14px;letter-spacing:.14em;font-size:13px;font-weight:650}
+.brand .mark{display:grid;place-items:center;border:1px solid #79dace;width:36px;height:36px;border-radius:50%;color:#91f5e6;font-size:19px}
+.brand small{display:block;color:#9eaab0;letter-spacing:.15em;font-size:9px;font-weight:450;margin-top:4px}
+.righttop{position:absolute;top:35px;right:35px;color:#b3bec8;font:11px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-align:right;line-height:1.9}
+.panel{position:absolute;left:34px;top:50%;transform:translateY(-50%);width:min(335px,calc(100vw - 68px));background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(22px);padding:28px 26px 25px;border-radius:3px;box-shadow:0 10px 80px #0008;pointer-events:auto}
+.eyebrow{font:10px ui-monospace,Consolas,monospace;letter-spacing:.25em;color:#86eee0;margin-bottom:16px}
+.panel h1{font-size:clamp(30px,4vw,45px);letter-spacing:-.052em;font-weight:480;line-height:1.09;margin-bottom:19px}
+.panel p{font-size:13px;line-height:1.66;color:#b5bec5;max-width:265px}
+.divider{height:1px;background:#a0bcb634;margin:22px 0 19px}
+.subtitle{font-size:10px;letter-spacing:.17em;color:#acbfc5;margin-bottom:11px}
+.realm{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:transparent;color:#d8e8e7;border:0;border-bottom:1px solid #bedbd824;padding:12px 1px;text-align:left;cursor:pointer;font-size:13px}
+.realm:hover,.realm.active{color:#9df9ed}.realm .orb{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 15px var(--c);margin-right:10px;display:inline-block}
+.realm .arr{font-size:18px;color:#8799a4}
+.actions{display:flex;gap:9px;margin-top:24px;flex-wrap:wrap}
+button.action{border:1px solid #72b6b37a;background:#122a30c7;color:#d5fff8;letter-spacing:.06em;font-size:10px;cursor:pointer;padding:10px 12px;font-weight:700}
+button.action.secondary{background:transparent;border-color:#a4b9c65b;color:#c4d1d6}
+button.action:hover{background:#25655a}
+#info{margin-top:14px;min-height:45px;color:#c3d3d8;font-size:11px;line-height:1.6}
+.bottom{position:absolute;bottom:30px;left:35px;color:#b9cbd0;font-size:10px;letter-spacing:.08em;display:flex;gap:20px;line-height:1.5}
+.bottom span{color:#69dbc8}.credit{position:absolute;bottom:28px;right:34px;font:10px ui-monospace,monospace;color:#bdcbcb;text-align:right;letter-spacing:.08em}
+#toast{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);color:#bfffee;border:1px solid #a7f9e353;background:#081f23e8;font-size:12px;letter-spacing:.05em;padding:12px 22px;opacity:0;transition:opacity .2s}
+#toast.show{opacity:1}
+@media(max-width:720px){.brand{top:14px;left:16px}.righttop{top:18px;right:15px;font-size:8px}.panel{left:15px;top:auto;bottom:72px;transform:none;width:min(355px,calc(100vw - 30px));padding:18px 18px 10px}.panel h1{font-size:26px;margin-bottom:7px}.panel p{font-size:11px}.divider{margin:9px 0}.realm{padding:6px 0}.actions{margin-top:10px}.bottom{bottom:15px;left:16px}.credit{bottom:14px;right:15px}.subtitle{margin-bottom:4px}#info{min-height:24px}}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
+</head>
+<body><div id="hud">
+<div class="brand"><div class="mark">⌘</div><div>SPATIAL COMMONS<small>COZYCLAY WORLD EXPERIMENT / 001</small></div></div>
+<div class="righttop">WORLD STATUS : <span style="color:#86eedc">LIVE</span><br>RENDERER : THREE.JS / WEBGL<br>AGENT-EDITABLE PROTOTYPE</div>
+<div class="panel">
+<div class="eyebrow">A WORLD IS A PROGRAM</div>
+<h1>Enter the<br>possible.</h1>
+<p>An inhabitable sketch of our metaverse: portals, places and projects. Not a mockup. A scene you can actually explore and change.</p>
+<div class="divider"></div>
+<div class="subtitle">CHOOSE A PORTAL</div>
+<div id="realms"></div>
+<div class="actions">
+<button class="action" id="add">+ BUILD MONOLITH</button>
+<button class="action secondary" id="clay">CLAY MODE</button>
+<button class="action secondary" id="save">EXPORT SCENE</button>
+</div>
+<div id="info">Drag to orbit · Scroll to travel · Click any glowing portal</div>
+</div>
+<div class="bottom"><div><span>●</span> WORLD ACTIVE</div><div id="count">0 OBJECTS</div><div id="mode">EXPLORE MODE</div></div>
+<div class="credit">HA D0 YUN / COZYCLAY FORK<br>WORLD DEMO • 07 NOV 2026</div>
+<div id="toast"></div></div>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/OrbitControls.js';
+const realms=[
+{id:'palimsterdam',name:'PALIMSTERDAM',caption:'The executable past',color:0x55e8d6,description:'A spatial atlas of history, places and evidence.'},
+{id:'ailinux',name:'AILINUX',caption:'The cognitive machine',color:0x8eacff,description:'Architecture of an AI-native operating system.'},
+{id:'instauratio',name:'INSTAURATIO',caption:'The constitutional garden',color:0xf2c28e,description:'A place for conscience, equality and inquiry.'},
+{id:'energinomics',name:'ENERGI-NOMICS',caption:'The energy citadel',color:0xdc8cff,description:'An experimental civilization of energy and exchange.'}
+];
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x050c17);scene.fog=new THREE.FogExp2(0x050c17,.013);
+const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,600);
+camera.position.set(18,15,28);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.38;
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.domElement.id='world';document.body.prepend(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,3,0);controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=6;controls.maxDistance=110;controls.maxPolarAngle=Math.PI*.49;
+const hemi=new THREE.HemisphereLight(0xc4eeff,0x302a33,2.5);scene.add(hemi);
+const key=new THREE.DirectionalLight(0xf2f6ff,3.8);key.position.set(-14,28,12);scene.add(key);
+const cyan=new THREE.PointLight(0x2cfbd5,85,44);cyan.position.set(0,10,0);scene.add(cyan);
+function mat(col,metal=.4,rough=.42){return new THREE.MeshStandardMaterial({color:col,metalness:metal,roughness:rough})}
+const stone=mat(0x263844,.65,.49), dark=mat(0x111d29,.69,.38), silver=mat(0x607884,.8,.24), basalt=mat(0x152631,.34,.8);
+function glow(hex,intensity=2){return new THREE.MeshStandardMaterial({color:hex,emissive:hex,emissiveIntensity:intensity,metalness:.25,roughness:.3,side:THREE.DoubleSide})}
+function mesh(g,m,parent=scene,pos=[0,0,0]){const a=new THREE.Mesh(g,m);a.position.set(...pos);parent.add(a);return a}
+function cylinder(top,bottom,height,m,parent,pos=[0,0,0],n=96){return mesh(new THREE.CylinderGeometry(top,bottom,height,n),m,parent,pos)}
+function ring(radius,tube,m,parent,pos=[0,0,0],radial=12,tubular=128){return mesh(new THREE.TorusGeometry(radius,tube,radial,tubular),m,parent,pos)}
+function textPanel(label,color){const c=document.createElement('canvas');c.width=1024;c.height=180;const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.textAlign='center';x.textBaseline='middle';x.font='600 59px system-ui';x.fillStyle='#e2f5f5';x.fillText(label,512,90);const tex=new THREE.CanvasTexture(c);return new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide,depthWrite:false})}
+// foundation and concentric terraces
+cylinder(19.7,20.5,1.2,basalt,scene,[0,-1.1,0]);cylinder(19,19.6,.2,stone,scene,[0,-.42,0]);
+cylinder(14.5,15,.4,dark,scene,[0,-.1,0]);
+for(const r of [9,13.5,18.5]){const a=ring(r,.045,glow(0x75cabd,.95),scene,[0,.17,0]);a.rotation.x=Math.PI/2}
+for(let i=0;i<80;i++){const a=i*Math.PI*2/80;const r=17.7;cylinder(.18,.18,1.15,i%4===0?silver:stone,scene,[Math.sin(a)*r,.53,Math.cos(a)*r],8)}
+// central gallery, orbital core and architectural pillars
+cylinder(5.7,6.4,1.0,stone,scene,[0,.45,0]);
+cylinder(4.7,5.2,.16,silver,scene,[0,1.04,0]);
+for(let i=0;i<10;i++){const a=i*Math.PI*2/10;const x=Math.sin(a)*4.35,z=Math.cos(a)*4.35;
+cylinder(.18,.23,7.7,silver,scene,[x,4.6,z],8);
+const cap=mesh(new THREE.SphereGeometry(.32,12,10),glow(0x70efdb,1.4),scene,[x,8.46,z]);}
+const dome=mesh(new THREE.IcosahedronGeometry(2.2,1),mat(0x275265,.75,.15),scene,[0,6.5,0]);
+const halo=ring(3.05,.075,glow(0x7deae0,2.1),scene,[0,6.5,0]);halo.rotation.y=.35;
+const halo2=ring(3.75,.035,glow(0xd1e9e5,.9),scene,[0,6.5,0]);halo2.rotation.x=Math.PI/2.6;
+const core=mesh(new THREE.OctahedronGeometry(.91,0),glow(0xa4fff0,1.45),scene,[0,6.5,0]);
+const beams=[];
+for(let i=0;i<16;i++){const angle=i*Math.PI*2/16,r=7+Math.random()*6;
+const h=1+Math.random()*3;const b=mesh(new THREE.BoxGeometry(.11,h,.11),glow(i%3===0?0x6ef7de:0x497b93,.55),scene,[Math.sin(angle)*r,h/2+.2,Math.cos(angle)*r]);beams.push(b)}
+const pickables=[],portals=[],realmButtons=document.getElementById('realms');
+let selected=null,clayMode=false,buildCount=0;
+function makePortal(item,i){
+const a=i*Math.PI*2/4-Math.PI/4,r=12.1;
+const g=new THREE.Group();g.position.set(Math.sin(a)*r,0,Math.cos(a)*r);g.rotation.y=a+Math.PI;scene.add(g);
+const accent=glow(item.color,1.8);
+cylinder(2.85,3.2,.26,stone,g,[0,.32,0],64);
+const lightcircle=ring(2.15,.105,accent,g,[0,3.15,0]);
+const inside=mesh(new THREE.CircleGeometry(2.06,64),new THREE.MeshBasicMaterial({color:item.color,transparent:true,opacity:.095,side:THREE.DoubleSide,depthWrite:false}),g,[0,3.15,-.05]);
+const inner=ring(1.65,.015,glow(item.color,.75),g,[0,3.15,-.06]);
+const lintel=mesh(new THREE.BoxGeometry(5.9,.25,.8),silver,g,[0,6.3,0]);
+const left=mesh(new THREE.BoxGeometry(.42,6.1,.7),stone,g,[-2.9,3.1,0]);
+const right=mesh(new THREE.BoxGeometry(.42,6.1,.7),stone,g,[2.9,3.1,0]);
+const name=mesh(new THREE.PlaneGeometry(5.1,.9),textPanel(item.name,item.color),g,[0,7.16,.1]);
+const point=new THREE.PointLight(item.color,24,11);point.position.set(0,3.4,1);g.add(point);
+for(const target of [inside,lightcircle,inner,lintel,left,right,name]){target.userData.realm=item.id;pickables.push(target)}
+const btn=document.createElement('button');btn.className='realm';btn.dataset.realm=item.id;
+btn.innerHTML='<span><i class="orb" style="--c:#'+item.color.toString(16).padStart(6,'0')+'"></i>'+item.name+'</span><span class="arr">↗</span>';
+btn.addEventListener('click',()=>select(item.id));realmButtons.appendChild(btn);
+portals.push({item,g,lightcircle,inside,point,a});
+}
+realms.forEach(makePortal);
+const starCount=430,stars=new THREE.BufferGeometry(),arr=new Float32Array(starCount*3);
+for(let i=0;i<starCount;i++){arr[3*i]=(Math.random()-.5)*220;arr[3*i+1]=10+Math.random()*100;arr[3*i+2]=(Math.random()-.5)*220}stars.setAttribute('position',new THREE.BufferAttribute(arr,3));
+scene.add(new THREE.Points(stars,new THREE.PointsMaterial({color:0x9ec2d9,size:.13,transparent:true,opacity:.75})));
+const grid=new THREE.GridHelper(260,90,0x245964,0x12313b);grid.position.y=-1.73;scene.add(grid);
+let focus=new THREE.Vector3(0,3,0);
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2300)}
+function select(id){const p=portals.find(p=>p.item.id===id);if(!p)return;selected=id;
+document.querySelectorAll('.realm').forEach(b=>b.classList.toggle('active',b.dataset.realm===id));
+document.getElementById('info').textContent=p.item.caption.toUpperCase()+' · '+p.item.description;
+focus.copy(p.g.position).add(new THREE.Vector3(0,3.7,0));
+toast('PORTAL SELECTED: '+p.item.name);
+}
+renderer.domElement.addEventListener('pointerdown',event=>{const box=renderer.domElement.getBoundingClientRect();
+const mouse=new THREE.Vector2((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1);
+const ray=new THREE.Raycaster();ray.setFromCamera(mouse,camera);
+const hits=ray.intersectObjects(pickables,false);if(hits.length)select(hits[0].object.userData.realm)});
+function updateCount(){let meshes=0;scene.traverse(o=>{if(o.isMesh)meshes++});document.getElementById('count').textContent=meshes+' OBJECTS'}
+updateCount();
+document.getElementById('add').onclick=()=>{buildCount++;const angle=Math.random()*Math.PI*2,r=6+Math.random()*3;
+const h=1.8+Math.random()*5;
+const tower=mesh(new THREE.BoxGeometry(1.15,h,1.15),mat(0x4f6d78,.85,.22),scene,[Math.sin(angle)*r,h/2+.21,Math.cos(angle)*r]);
+tower.userData.createdBy='world-demo';tower.userData.id='agent-monolith-'+buildCount;
+const topper=mesh(new THREE.BoxGeometry(1.28,.12,1.28),glow(0x86e6d6,1.7),scene,[tower.position.x,h+.24,tower.position.z]);topper.userData.createdBy='world-demo';
+updateCount();toast('BUILT MONOLITH #'+buildCount+' · SCENE CHANGED')};
+document.getElementById('clay').onclick=()=>{clayMode=!clayMode;scene.traverse(o=>{if(!o.isMesh||!o.material)return;
+if(clayMode){o.userData.originalMaterial=o.material;o.material=mat(0x8c9ba2,0,.96)}else if(o.userData.originalMaterial){o.material=o.userData.originalMaterial;delete o.userData.originalMaterial}});
+document.getElementById('mode').textContent=clayMode?'CLAY PREVIS MODE':'EXPLORE MODE';
+document.getElementById('clay').textContent=clayMode?'RESTORE LIGHTS':'CLAY MODE';toast(clayMode?'COZYCLAY-INSPIRED PREVIS':'MATERIALS RESTORED')};
+document.getElementById('save').onclick=()=>{const contents=JSON.stringify({format:'spatial-commons-v1',inspiredBy:'CozyClay 3.2.2',selectedRealm:selected,createdAt:new Date().toISOString(),scene:scene.toJSON()},null,2);
+const url=URL.createObjectURL(new Blob([contents],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='spatial-commons-world.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1200);toast('EXPORTED WORLD SCENE JSON')};
+const clock=new THREE.Clock();
+function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();
+dome.rotation.y=t*.19;dome.rotation.z=t*.08;core.rotation.y=-t*.6;core.rotation.x=t*.25;
+halo.rotation.y=t*.12;halo2.rotation.y=-t*.07;
+for(let i=0;i<portals.length;i++){portals[i].lightcircle.rotation.z=Math.sin(t*.42+i)*.028;portals[i].inside.material.opacity=.09+.035*Math.sin(t*1.4+i)}
+controls.target.lerp(focus,.035);controls.update();renderer.render(scene,camera)}
+animate();
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+console.log('SPATIAL_COMMONS_READY / CozyClay fork / Three.js '+THREE.REVISION);
+</script></body></html>
